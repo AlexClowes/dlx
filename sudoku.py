@@ -34,10 +34,33 @@ def build_link_matrix(sudoku):
                 for col in range(3 * box_col, 3 * (box_col + 1)):
                     array[possibility_index(row, col, val), constraint_idx] = 1
 
-    # Get row names
+    # Get column, row names
+    column_names = (
+        [f"R{r}C{c}" for r, c, in product(range(1, 10), repeat=2)]
+        + [f"R{r}#{v}" for r, v, in product(range(1, 10), repeat=2)]
+        + [f"C{c}#{v}" for c, v in product(range(1, 10), repeat=2)]
+        + [f"B{b}#{v}" for b, v in product(range(1, 10), repeat=2)]
+    )
     row_names = [f"R{r}C{c}#{v}" for r, c, v in product(range(1, 10), repeat=3)]
 
-    return dlx.build_link_matrix(array, row_names=row_names)
+    link_matrix = dlx.build_link_matrix(
+        array, column_names=column_names, row_names=row_names
+    )
+
+    # Apply given values from sudoku
+    satisfied_constraints = set()
+    for row, col in product(range(9), repeat=2):
+        if sudoku[row, col] != 0:
+            val = sudoku[row, col]
+            box = 3 * (row // 3) + (col // 3)
+            satisfied_constraints |= {
+                f"R{row+1}C{col+1}", f"R{row+1}#{val}", f"C{col+1}#{val}", f"B{box+1}#{val}"
+            }
+    for header in dlx.linked_list_iter(link_matrix, "R"):
+        if header.N in satisfied_constraints:
+            dlx.cover(header)
+
+    return link_matrix
 
 
 def solution_as_array(solution):
@@ -50,14 +73,23 @@ def solution_as_array(solution):
 
 def solve(sudoku):
     link_matrix = build_link_matrix(sudoku)
-    yield from map(solution_as_array, dlx.search(link_matrix, []))
+    yield from (sudoku + solution_as_array(sol) for sol in dlx.search(link_matrix, []))
 
 
 def main():
-    sudoku = np.zeros((9, 9), dtype=int)
+    sudoku = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 2, 0, 0, 3],
+        [0, 0, 0, 4, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 5, 0, 0],
+        [4, 0, 1, 6, 0, 0, 0, 0, 0],
+        [0, 0, 7, 1, 0, 0, 0, 0, 0],
+        [0, 5, 0, 0, 0, 0, 2, 0, 0],
+        [0, 0, 0, 0, 8, 0, 0, 4, 0],
+        [0, 3, 0, 9, 1, 0, 0, 0, 0],
+    ])
     for solution in solve(sudoku):
         print(solution)
-        break
 
 
 if __name__ == "__main__":
