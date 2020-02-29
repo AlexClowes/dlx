@@ -86,7 +86,7 @@ def search(root, solution):
     if root.R == root:
         yield solution
     else:
-        c = root.R
+        c = min(linked_list_iter(root, "R"), key=lambda h: h.S)
         cover(c)
         for r in linked_list_iter(c, "D"):
             solution.append(r)
