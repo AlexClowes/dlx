@@ -1,36 +1,39 @@
+from itertools import repeat
+
 import numpy as np
 
 
 class Node:
-    __slots__ = "L", "R", "U", "D", "C"
+    __slots__ = "L", "R", "U", "D", "C", "N"
+
+    def __init__(self, name=None):
+        self.N = name
 
 
 class ListHeader(Node):
-    __slots__ = "S", "N"
+    __slots__ = "S"
 
     def __init__(self, name=None):
-        if name is not None:
-            self.N = name
+        self.N = name
         self.S = 0
 
 
-def build_row(length):
-    # Build one row of
-    root = last_node = Node()
+def build_row(length, name):
+    # Build one row of nodes
+    root = last_node = Node(name)
     for _ in range(length - 1):
-        next_node = Node()
+        next_node = Node(name)
         last_node.R, next_node.L = next_node, last_node
         last_node = next_node
     last_node.R, root.L = root, last_node
     return root
 
 
-def build_link_matrix(array, column_names):
-    root = ListHeader()
-
+def build_link_matrix(array, column_names=None, row_names=None):
     # Build list headers
+    root = ListHeader()
     last_node = root
-    for name in column_names:
+    for name in column_names or repeat(None, array.shape[1]):
         next_node = ListHeader(name)
         next_node.U = next_node.D = next_node
         last_node.R, next_node.L = next_node, last_node
@@ -38,8 +41,8 @@ def build_link_matrix(array, column_names):
     next_node.R, root.L = root, next_node
 
     # Build rows
-    for i in range(array.shape[0]):
-        row = build_row(np.sum(array[i]))
+    for i, name in enumerate(row_names or repeat(None, array.shape[0])):
+        row = build_row(np.sum(array[i]), name)
         # Hang new row from headers
         header = root
         node = row
