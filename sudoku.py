@@ -12,31 +12,27 @@ def possibility_index(row, col, val):
 def build_link_matrix(sudoku):
     array = np.zeros((729, 324), dtype=int)
     # Cell constraints
-    for row in range(9):
-        for col in range(9):
-            constraint_idx = 9 * row + col
-            for val in range(9):
-                array[possibility_index(row, col, val), constraint_idx] = 1
+    for row, col in product(range(9), repeat=2):
+        constraint_idx = 9 * row + col
+        for val in range(9):
+            array[possibility_index(row, col, val), constraint_idx] = 1
     # Row constraints
-    for row in range(9):
-        for val in range(9):
-            constraint_idx = 81 + 9 * row + val
-            for col in range(9):
-                array[possibility_index(row, col, val), constraint_idx] = 1
+    for row, val in product(range(9), repeat=2):
+        constraint_idx = 81 + 9 * row + val
+        for col in range(9):
+            array[possibility_index(row, col, val), constraint_idx] = 1
     # Column constraints
-    for col in range(9):
-        for val in range(9):
-            constraint_idx = 162 + 9 * col + val
-            for row in range(9):
-                array[possibility_index(row, col, val), constraint_idx] = 1
+    for col, val in product(range(9), repeat=2):
+        constraint_idx = 162 + 9 * col + val
+        for row in range(9):
+            array[possibility_index(row, col, val), constraint_idx] = 1
     # Box constraints
-    for box_row in range(3):
-        for box_col in range(3):
-            for val in range(9):
-                constraint_idx = 243 + 9 * (3 * box_row + box_col) + val
-                for row in range(3 * box_row, 3 * (box_row + 1)):
-                    for col in range(3 * box_col, 3 * (box_col + 1)):
-                        array[possibility_index(row, col, val), constraint_idx] = 1
+    for box_row, box_col in product(range(3), repeat=2):
+        for val in range(9):
+            constraint_idx = 243 + 9 * (3 * box_row + box_col) + val
+            for row in range(3 * box_row, 3 * (box_row + 1)):
+                for col in range(3 * box_col, 3 * (box_col + 1)):
+                    array[possibility_index(row, col, val), constraint_idx] = 1
 
     # Get row names
     row_names = [f"R{r}C{c}#{v}" for r, c, v in product(range(1, 10), repeat=3)]
