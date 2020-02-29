@@ -1,3 +1,5 @@
+from itertools import product
+
 import numpy as np
 
 import dlx
@@ -36,22 +38,16 @@ def build_link_matrix(sudoku):
                     for col in range(3 * box_col, 3 * (box_col + 1)):
                         array[possibility_index(row, col, val), constraint_idx] = 1
 
-    # Get column names
-    column_names = np.array(
-        [f"R{i+1}C{j+1}" for i in range(9) for j in range(9)]
-        + [f"R{i+1}#{j+1}" for i in range(9) for j in range(9)]
-        + [f"C{i+1}#{j+1}" for i in range(9) for j in range(9)]
-        + [f"B{i+1}#{j+1}" for i in range(9) for j in range(9)]
-    )
+    # Get row names
+    row_names = [f"R{r}C{c}#{v}" for r, c, v in product(range(1, 10), repeat=3)]
 
-    return dlx.build_link_matrix(array, column_names)
+    return dlx.build_link_matrix(array, row_names=row_names)
 
 
 def solution_as_array(solution):
     array = np.zeros((9, 9), dtype=int)
     for r in solution:
-        row, col = int(r.C.N[1]) - 1, int(r.C.N[3]) - 1
-        val = r.R.C.N[3]
+        row, col, val = int(r.N[1]) - 1, int(r.N[3]) - 1, int(r.N[5])
         array[row, col] = val
     return array
 
